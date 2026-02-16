@@ -1,0 +1,335 @@
+<!-- templates/index.html - UPDATED FOR PHASE 2 -->
+{% extends "base.html" %}
+
+{% block title %}Home - SuspectSpeech{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Hero Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+            <h1 class="display-4 fw-bold mb-3">
+                <span class="text-primary">Suspect</span><span class="text-danger">Speech</span>
+            </h1>
+            <h2 class="mb-4">AI-Powered Threat Detection System</h2>
+            <p class="lead mb-4">
+                Real-time analysis of voice and text communications for threat detection, 
+                emotion recognition, and cybercrime prevention using advanced AI algorithms.
+            </p>
+            <div class="d-grid gap-2 d-md-flex">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                </a>
+                <a href="#features" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-info-circle"></i> Learn More
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                        <h3>Quick Analysis</h3>
+                    </div>
+                    <form id="quickAnalyzeForm">
+                        <div class="mb-3">
+                            <label for="inputText" class="form-label">Enter text to analyze:</label>
+                            <textarea class="form-control" id="inputText" rows="4" 
+                                      placeholder="Enter suspicious text here..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="languageSelect" class="form-label">Language:</label>
+                            <select class="form-select" id="languageSelect">
+                                <option value="en">English</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="hi">Hindi</option>
+                                <option value="de">German</option>
+                                <option value="it">Italian</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Analyze Text
+                        </button>
+                    </form>
+                    <div id="quickResult" class="mt-3 d-none">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="row mb-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="border-bottom pb-3">Key Features</h2>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-comments fa-3x text-primary mb-3"></i>
+                    <h4 class="card-title">Multi-Format Input</h4>
+                    <p class="card-text">
+                        Analyze both voice recordings and text messages in real-time.
+                        Supports WhatsApp, social media, and direct communications.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-brain fa-3x text-success mb-3"></i>
+                    <h4 class="card-title">AI Analysis</h4>
+                    <p class="card-text">
+                        Combines emotion detection, sentiment analysis, and contextual 
+                        understanding for accurate threat classification.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-globe fa-3x text-warning mb-3"></i>
+                    <h4 class="card-title">Multilingual</h4>
+                    <p class="card-text">
+                        Supports regional and global languages with cultural context 
+                        awareness for accurate threat detection.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="border-bottom pb-3">How It Works</h2>
+        </div>
+        
+        <div class="col-md-3 text-center">
+            <div class="step-circle bg-primary text-white mb-3">1</div>
+            <h5>Input</h5>
+            <p>Submit text or voice data through our interface</p>
+        </div>
+        
+        <div class="col-md-3 text-center">
+            <div class="step-circle bg-success text-white mb-3">2</div>
+            <h5>Process</h5>
+            <p>AI models analyze emotion, sentiment, and context</p>
+        </div>
+        
+        <div class="col-md-3 text-center">
+            <div class="step-circle bg-warning text-white mb-3">3</div>
+            <h5>Analyze</h5>
+            <p>Threat levels are calculated and categorized</p>
+        </div>
+        
+        <div class="col-md-3 text-center">
+            <div class="step-circle bg-danger text-white mb-3">4</div>
+            <h5>Report</h5>
+            <p>Detailed analysis with actionable insights</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="border-bottom pb-3">System Statistics</h2>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 id="totalCasesHome" class="mb-0">0</h2>
+                    <p class="mb-0">Total Cases</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h2 id="highRiskHome" class="mb-0">0</h2>
+                    <p class="mb-0">High Risk</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h2 id="totalAnalysesHome" class="mb-0">0</h2>
+                    <p class="mb-0">Analyses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h2 id="systemStatusHome" class="mb-0">✓</h2>
+                    <p class="mb-0">System Status</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load home page statistics
+async function loadHomeStatistics() {
+    try {
+        const response = await fetch('/statistics');
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.statistics;
+            document.getElementById('totalCasesHome').textContent = stats.total_cases;
+            document.getElementById('highRiskHome').textContent = stats.high_risk_cases;
+            document.getElementById('totalAnalysesHome').textContent = stats.total_analyses;
+            document.getElementById('systemStatusHome').textContent = stats.system_status === 'operational' ? '✓' : '✗';
+        }
+    } catch (error) {
+        console.error('Error loading home statistics:', error);
+    }
+}
+
+// Quick analysis form submission - UPDATED FOR PHASE 2
+document.getElementById('quickAnalyzeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const text = document.getElementById('inputText').value;
+    const language = document.getElementById('languageSelect').value;
+    
+    if (!text.trim()) {
+        showNotification('Please enter some text to analyze', 'error');
+        return;
+    }
+    
+    try {
+        // Show loading
+        const resultDiv = document.getElementById('quickResult');
+        resultDiv.className = 'alert alert-info mt-3';
+        resultDiv.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                Analyzing text...
+            </div>
+        `;
+        resultDiv.classList.remove('d-none');
+        
+        // UPDATED ENDPOINT: Use /analyze/text instead of /analyze
+        const response = await fetch('/analyze/text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                text, 
+                language,
+                type: 'full'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            const analysis = result.analysis;
+            const threatColor = getThreatColor(analysis.threat_level);
+            const threatIcon = analysis.threat_level === 'high' ? 'exclamation-triangle' : 
+                             analysis.threat_level === 'medium' ? 'exclamation-circle' : 'check-circle';
+            
+            resultDiv.className = `alert alert-${threatColor} mt-3`;
+            resultDiv.innerHTML = `
+                <h5><i class="fas fa-${threatIcon}"></i> Analysis Complete</h5>
+                <p><strong>Text:</strong> ${analysis.text.substring(0, 50)}${analysis.text.length > 50 ? '...' : ''}</p>
+                <p><strong>Sentiment:</strong> ${analysis.sentiment} (${analysis.sentiment_score})</p>
+                <p><strong>Emotion:</strong> ${analysis.emotion}</p>
+                <p><strong>Threat Level:</strong> 
+                    <span class="badge bg-${threatColor}">
+                        ${analysis.threat_level.toUpperCase()} (${analysis.threat_score})
+                    </span>
+                </p>
+                <div class="mt-2">
+                    <strong>Categories:</strong>
+                    ${analysis.categories ? analysis.categories.map(cat => 
+                        `<span class="badge bg-secondary me-1">${cat}</span>`
+                    ).join('') : ''}
+                </div>
+                <div class="mt-2">
+                    <a href="/dashboard" class="btn btn-sm btn-outline-${threatColor}">
+                        <i class="fas fa-chart-line"></i> View Detailed Analysis
+                    </a>
+                </div>
+            `;
+            
+            showNotification('Analysis completed successfully!', 'success');
+            loadHomeStatistics(); // Refresh stats
+        } else {
+            throw new Error(result.error || 'Analysis failed');
+        }
+    } catch (error) {
+        showNotification('Error: ' + error.message, 'error');
+        const resultDiv = document.getElementById('quickResult');
+        resultDiv.className = 'alert alert-danger mt-3';
+        resultDiv.innerHTML = `
+            <h5><i class="fas fa-exclamation-triangle"></i> Analysis Failed</h5>
+            <p>${error.message}</p>
+        `;
+        resultDiv.classList.remove('d-none');
+    }
+});
+
+// Utility functions (same as in main.js)
+function showNotification(message, type = 'info') {
+    let container = document.getElementById('notification-container');
+    
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.style.minWidth = '300px';
+    notification.style.marginBottom = '10px';
+    notification.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+    
+    notification.innerHTML = `
+        <strong>${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info'}</strong>
+        <span>${message}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function getThreatColor(level) {
+    switch(level) {
+        case 'high': return 'danger';
+        case 'medium': return 'warning';
+        case 'low': return 'success';
+        default: return 'secondary';
+    }
+}
+
+// Load statistics when page loads
+document.addEventListener('DOMContentLoaded', loadHomeStatistics);
+</script>
+{% endblock %}

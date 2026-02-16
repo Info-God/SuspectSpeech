@@ -1,0 +1,10 @@
+# .gitignore content:
+venv/
+__pycache__/
+*.pyc
+.env
+instance/
+*.log
+*.db
+*.sqlite3
+.DS_Store

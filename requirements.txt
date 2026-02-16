@@ -1,0 +1,29 @@
+# Phase 3: Complete Requirements
+Flask==2.3.3
+flask-cors==4.0.0
+python-dotenv==1.0.0
+numpy==1.26.4
+pandas==2.2.0
+scikit-learn==1.4.2
+nltk==3.8.1
+textblob==0.17.1
+matplotlib==3.8.3
+seaborn==0.13.2
+plotly==5.19.0
+gunicorn==20.1.0
+
+# AI/ML Packages
+transformers==4.31.0
+torch==2.2.0
+accelerate==0.21.0  # MISSING - ADD THIS
+openai-whisper==20231117
+SpeechRecognition==3.10.0
+pydub==0.25.1
+vaderSentiment==3.3.2
+emoji==2.8.0
+
+# Additional Dependencies
+soundfile==0.12.1  # MISSING - ADD THIS
+sentencepiece==0.2.0  # MISSING - ADD THIS
+protobuf==3.20.3  # MISSING - ADD THIS
+scipy==1.10.1

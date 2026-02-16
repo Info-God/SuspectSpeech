@@ -1,0 +1,788 @@
+<!-- templates/cases.html -->
+{% extends "base.html" %}
+
+{% block title %}Case Management - SuspectSpeech{% endblock %}
+
+{% block head %}
+<style>
+    .case-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    .case-card.high-risk {
+        border-left-color: #dc3545;
+    }
+    .case-card.medium-risk {
+        border-left-color: #ffc107;
+    }
+    .case-card.low-risk {
+        border-left-color: #28a745;
+    }
+    .case-status {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+    .status-open { background-color: #d1ecf1; color: #0c5460; }
+    .status-investigating { background-color: #fff3cd; color: #856404; }
+    .status-resolved { background-color: #d4edda; color: #155724; }
+    .case-priority {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .priority-urgent { color: #dc3545; }
+    .priority-high { color: #fd7e14; }
+    .priority-medium { color: #ffc107; }
+    .priority-low { color: #6c757d; }
+    .filter-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .case-details-modal .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-0"><i class="fas fa-folder-open"></i> Case Management</h1>
+                    <p class="text-muted">Monitor and manage all threat cases</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCaseModal">
+                        <i class="fas fa-plus"></i> New Case
+                    </button>
+                    <button id="exportBtn" class="btn btn-success ms-2">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 id="totalCasesStat" class="mb-0">0</h2>
+                            <p class="mb-0">Total Cases</p>
+                        </div>
+                        <i class="fas fa-folder fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 id="highRiskStat" class="mb-0">0</h2>
+                            <p class="mb-0">High Risk</p>
+                        </div>
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 id="openCasesStat" class="mb-0">0</h2>
+                            <p class="mb-0">Open Cases</p>
+                        </div>
+                        <i class="fas fa-clock fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 id="resolvedStat" class="mb-0">0</h2>
+                            <p class="mb-0">Resolved</p>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Charts -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="filter-card card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-filter"></i> Filters</h5>
+                    <div class="mb-3">
+                        <label class="form-label">Case Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="open">Open</option>
+                            <option value="investigating">Investigating</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Risk Level</label>
+                        <select class="form-select" id="riskFilter">
+                            <option value="all">All Risk Levels</option>
+                            <option value="high">High Risk</option>
+                            <option value="medium">Medium Risk</option>
+                            <option value="low">Low Risk</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Platform</label>
+                        <select class="form-select" id="platformFilter">
+                            <option value="all">All Platforms</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Twitter">Twitter</option>
+                            <option value="Discord">Discord</option>
+                        </select>
+                    </div>
+                    <button id="applyFilters" class="btn btn-light w-100">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <button id="clearFilters" class="btn btn-outline-light w-100 mt-2">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="chart-container">
+                <h5><i class="fas fa-chart-pie"></i> Case Distribution</h5>
+                <canvas id="caseChart" height="150"></canvas>
+            </div>
+            <div class="chart-container">
+                <h5><i class="fas fa-chart-line"></i> Cases Timeline</h5>
+                <canvas id="timelineChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cases Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> All Cases</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Title</th>
+                                    <th>Risk Level</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Location</th>
+                                    <th>Platform</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casesTableBody">
+                                <!-- Cases will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3" id="loadingCases">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading cases...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Case Modal -->
+<div class="modal fade" id="newCaseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content case-details-modal">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Create New Case</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newCaseForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Case Title *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Risk Level *</label>
+                            <select class="form-select" name="risk_level" required>
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Platform</label>
+                            <select class="form-select" name="platform">
+                                <option value="WhatsApp">WhatsApp</option>
+                                <option value="Facebook">Facebook</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Twitter">Twitter</option>
+                                <option value="Discord">Discord</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Location</label>
+                            <input type="text" class="form-control" name="location" placeholder="City, Country">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Assigned To</label>
+                            <input type="text" class="form-control" name="assigned_to" placeholder="Investigator name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Victim Age</label>
+                            <input type="text" class="form-control" name="victim_age" placeholder="Age or range">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createNewCase()">Create Case</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Case Details Modal -->
+<div class="modal fade" id="caseDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content case-details-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="caseDetailsTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="caseDetailsBody">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" onclick="deleteCurrentCase()">Delete Case</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Global variables
+let currentCaseId = null;
+let casesChart = null;
+let timelineChart = null;
+
+// Load cases on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCases();
+    loadStatistics();
+    initializeCharts();
+    
+    // Event listeners
+    document.getElementById('applyFilters').addEventListener('click', loadCases);
+    document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    document.getElementById('exportBtn').addEventListener('click', exportCases);
+});
+
+// Load cases from API
+async function loadCases() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const riskFilter = document.getElementById('riskFilter').value;
+    
+    const params = new URLSearchParams();
+    if (statusFilter !== 'all') params.append('status', statusFilter);
+    if (riskFilter !== 'all') params.append('risk_level', riskFilter);
+    
+    try {
+        // FIXED: Use /api/cases instead of /cases
+        const response = await fetch(`/api/cases?${params.toString()}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCases(data.cases);
+            updateCharts(data.cases);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        console.error('Error loading cases:', error);
+        alert('Failed to load cases: ' + error.message);
+    }
+}
+
+// Display cases in table
+function displayCases(cases) {
+    const tbody = document.getElementById('casesTableBody');
+    const loadingDiv = document.getElementById('loadingCases');
+    
+    if (cases.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p>No cases found</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCaseModal">
+                        <i class="fas fa-plus"></i> Create First Case
+                    </button>
+                </td>
+            </tr>
+        `;
+        loadingDiv.style.display = 'none';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    cases.forEach(caseItem => {
+        // Risk badge color
+        let riskColor = 'success';
+        let riskIcon = 'shield-check';
+        if (caseItem.risk_level === 'high') {
+            riskColor = 'danger';
+            riskIcon = 'exclamation-triangle';
+        } else if (caseItem.risk_level === 'medium') {
+            riskColor = 'warning';
+            riskIcon = 'exclamation-circle';
+        }
+        
+        // Status badge
+        let statusClass = 'status-open';
+        let statusIcon = 'clock';
+        if (caseItem.status === 'investigating') {
+            statusClass = 'status-investigating';
+            statusIcon = 'search';
+        } else if (caseItem.status === 'resolved') {
+            statusClass = 'status-resolved';
+            statusIcon = 'check-circle';
+        }
+        
+        // Priority class
+        let priorityClass = 'priority-medium';
+        if (caseItem.priority === 'urgent') priorityClass = 'priority-urgent';
+        else if (caseItem.priority === 'high') priorityClass = 'priority-high';
+        else if (caseItem.priority === 'low') priorityClass = 'priority-low';
+        
+        const row = document.createElement('tr');
+        row.className = `case-card ${caseItem.risk_level}-risk`;
+        row.onclick = () => showCaseDetails(event, caseItem.id);
+        row.style.cursor = 'pointer';
+        
+        row.innerHTML = `
+            <td><strong>${caseItem.case_id}</strong></td>
+            <td>${caseItem.title}</td>
+            <td>
+                <span class="badge bg-${riskColor}">
+                    <i class="fas fa-${riskIcon}"></i> ${caseItem.risk_level.toUpperCase()}
+                </span>
+            </td>
+            <td>
+                <span class="case-status ${statusClass}">
+                    <i class="fas fa-${statusIcon}"></i> ${caseItem.status}
+                </span>
+            </td>
+            <td><span class="case-priority ${priorityClass}">${caseItem.priority.toUpperCase()}</span></td>
+            <td>${caseItem.location || 'Unknown'}</td>
+            <td>${caseItem.platform || 'Unknown'}</td>
+            <td>${new Date(caseItem.created_at).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="showCaseDetails(event, '${caseItem.id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    loadingDiv.style.display = 'none';
+}
+
+// Show case details
+async function showCaseDetails(event, caseId) {
+    event.stopPropagation();
+    
+    try {
+        // FIXED: Use /api/cases instead of /cases
+        const response = await fetch('/api/cases');
+        const data = await response.json();
+        
+        if (data.success) {
+            const caseItem = data.cases.find(c => c.id === caseId);
+            if (caseItem) {
+                currentCaseId = caseId;
+                
+                // Update modal title
+                document.getElementById('caseDetailsTitle').textContent = caseItem.title;
+                
+                // Create details HTML
+                const detailsHtml = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Case Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Case ID:</th>
+                                    <td>${caseItem.case_id}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        <span class="case-status ${caseItem.status === 'open' ? 'status-open' : caseItem.status === 'investigating' ? 'status-investigating' : 'status-resolved'}">
+                                            ${caseItem.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Risk Level:</th>
+                                    <td>
+                                        <span class="badge bg-${caseItem.risk_level === 'high' ? 'danger' : caseItem.risk_level === 'medium' ? 'warning' : 'success'}">
+                                            ${caseItem.risk_level}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Priority:</th>
+                                    <td>${caseItem.priority}</td>
+                                </tr>
+                                <tr>
+                                    <th>Platform:</th>
+                                    <td>${caseItem.platform}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Location & Contact</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Location:</th>
+                                    <td>${caseItem.location}</td>
+                                </tr>
+                                <tr>
+                                    <th>Victim Age:</th>
+                                    <td>${caseItem.victim_age}</td>
+                                </tr>
+                                <tr>
+                                    <th>Assigned To:</th>
+                                    <td>${caseItem.assigned_to}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td>${new Date(caseItem.created_at).toLocaleString()}</td>
+                                </tr>
+                                <tr>
+                                    <th>Updated:</th>
+                                    <td>${new Date(caseItem.updated_at).toLocaleString()}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Description</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                ${caseItem.description}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Update Case Status</h6>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="updateCaseStatus('open')">
+                                <i class="fas fa-clock"></i> Open
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" onclick="updateCaseStatus('investigating')">
+                                <i class="fas fa-search"></i> Investigating
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="updateCaseStatus('resolved')">
+                                <i class="fas fa-check-circle"></i> Resolved
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('caseDetailsBody').innerHTML = detailsHtml;
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('caseDetailsModal'));
+                modal.show();
+            }
+        }
+    } catch (error) {
+        console.error('Error loading case details:', error);
+    }
+}
+
+// Load statistics
+async function loadStatistics() {
+    try {
+        const response = await fetch('/statistics');
+        const data = await response.json();
+        
+        if (data.success) {
+            const stats = data.statistics;
+            document.getElementById('totalCasesStat').textContent = stats.total_cases;
+            document.getElementById('highRiskStat').textContent = stats.high_risk_cases;
+            document.getElementById('openCasesStat').textContent = stats.open_cases;
+            document.getElementById('resolvedStat').textContent = stats.total_cases - stats.open_cases;
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+// Initialize charts
+function initializeCharts() {
+    const caseCtx = document.getElementById('caseChart').getContext('2d');
+    casesChart = new Chart(caseCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    timelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'New Cases',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Update charts with data
+function updateCharts(cases) {
+    // Update case distribution
+    const highRisk = cases.filter(c => c.risk_level === 'high').length;
+    const mediumRisk = cases.filter(c => c.risk_level === 'medium').length;
+    const lowRisk = cases.filter(c => c.risk_level === 'low').length;
+    
+    casesChart.data.datasets[0].data = [highRisk, mediumRisk, lowRisk];
+    casesChart.update();
+    
+    // Update timeline (mock data for demo)
+    timelineChart.data.datasets[0].data = [2, 3, 5, 4, 6, 2, 1];
+    timelineChart.update();
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('statusFilter').value = 'all';
+    document.getElementById('riskFilter').value = 'all';
+    document.getElementById('platformFilter').value = 'all';
+    loadCases();
+}
+
+// Create new case
+async function createNewCase() {
+    const form = document.getElementById('newCaseForm');
+    const formData = new FormData(form);
+    
+    const caseData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        risk_level: formData.get('risk_level'),
+        priority: formData.get('priority'),
+        platform: formData.get('platform'),
+        location: formData.get('location'),
+        assigned_to: formData.get('assigned_to'),
+        victim_age: formData.get('victim_age')
+    };
+    
+    try {
+        // FIXED: Use /api/cases instead of /cases
+        const response = await fetch('/api/cases', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(caseData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Close modal and refresh
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newCaseModal'));
+            modal.hide();
+            form.reset();
+            
+            loadCases();
+            loadStatistics();
+            
+            alert('Case created successfully!');
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (error) {
+        alert('Failed to create case: ' + error.message);
+    }
+}
+
+// Update case status
+async function updateCaseStatus(status) {
+    if (!currentCaseId) return;
+    
+    try {
+        // FIXED: Use /api/cases instead of /cases
+        const response = await fetch(`/api/cases/${currentCaseId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: status })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Close modal and refresh
+            const modal = bootstrap.Modal.getInstance(document.getElementById('caseDetailsModal'));
+            modal.hide();
+            
+            loadCases();
+            loadStatistics();
+            
+            alert('Case status updated successfully!');
+        }
+    } catch (error) {
+        console.error('Error updating case:', error);
+    }
+}
+
+// Delete current case
+async function deleteCurrentCase() {
+    if (!currentCaseId || !confirm('Are you sure you want to delete this case?')) return;
+    
+    try {
+        // FIXED: Use /api/cases instead of /cases
+        const response = await fetch(`/api/cases/${currentCaseId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Close modal and refresh
+            const modal = bootstrap.Modal.getInstance(document.getElementById('caseDetailsModal'));
+            modal.hide();
+            
+            loadCases();
+            loadStatistics();
+            
+            alert('Case deleted successfully!');
+        }
+    } catch (error) {
+        console.error('Error deleting case:', error);
+    }
+}
+
+// Export cases
+async function exportCases() {
+    try {
+        const response = await fetch('/export/cases');
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `suspectspeech_cases_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        alert('Failed to export cases: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
