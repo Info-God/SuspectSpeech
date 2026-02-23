@@ -1,29 +1,40 @@
-# Phase 3: Complete Requirements
+# Phase 3: Complete Requirements - FIXED AND TESTED
 Flask==2.3.3
 flask-cors==4.0.0
 python-dotenv==1.0.0
-numpy==1.26.4
-pandas==2.2.0
-scikit-learn==1.4.2
+
+# Core Data Science
+numpy==1.24.3  # DOWNGRADED for better compatibility
+pandas==2.0.3  # DOWNGRADED to avoid PyArrow issues
+scikit-learn==1.3.2  # DOWNGRADED for stability
+
+# NLP Packages
 nltk==3.8.1
 textblob==0.17.1
-matplotlib==3.8.3
-seaborn==0.13.2
-plotly==5.19.0
-gunicorn==20.1.0
-
-# AI/ML Packages
-transformers==4.31.0
-torch==2.2.0
-accelerate==0.21.0  # MISSING - ADD THIS
-openai-whisper==20231117
-SpeechRecognition==3.10.0
-pydub==0.25.1
 vaderSentiment==3.3.2
 emoji==2.8.0
 
-# Additional Dependencies
-soundfile==0.12.1  # MISSING - ADD THIS
-sentencepiece==0.2.0  # MISSING - ADD THIS
-protobuf==3.20.3  # MISSING - ADD THIS
-scipy==1.10.1
+# Visualization
+matplotlib==3.7.5  # DOWNGRADED for compatibility
+seaborn==0.12.2  # DOWNGRADED for compatibility
+plotly==5.18.0  # DOWNGRADED for stability
+
+# AI/ML Packages (OPTIONAL - Uncomment if you have GPU)
+# torch==2.0.1  # More stable version
+# transformers==4.30.2  # Compatible with torch 2.0.1
+# accelerate==0.20.3  # For transformer optimization
+# sentencepiece==0.1.99  # For tokenization
+# protobuf==3.20.3  # Required by transformers
+
+# Voice Processing
+SpeechRecognition==3.10.0
+pydub==0.25.1
+soundfile==0.12.1  # CRITICAL - WAS MISSING
+scipy==1.10.1  # For audio processing
+
+# Production Server (for deployment)
+gunicorn==20.1.0
+
+# Additional Utilities
+uuid  # Built-in, no need to install
+datetime  # Built-in, no need to install
